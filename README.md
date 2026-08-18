@@ -9,6 +9,10 @@ campus and pay **৳100/hour** (billed per minute) using **bKash, Rocket, Nagad,
 
 ## What it does
 
+- **QR-code unlock** — every dock has a real, scannable QR code (generated in-browser).
+  Tap "Scan QR to unlock," point a camera at a station's code, and it decodes it live and
+  jumps straight into booking that station — no manual selection needed. A manual code
+  entry fallback is built in for low light / no camera during a live demo.
 - **Wallet (metro-card style balance)** — top up your CampusCycle balance using
   bKash / Rocket / Nagad / Upay. Once funded, unlocking a cycle deducts straight from the
   balance — no repeat gateway payment for every ride, just like tapping a metro card.
@@ -101,6 +105,9 @@ instructor.
   even for very short rides where a full gateway checkout would feel like overkill.
 - **Why per-minute billing**: fair pricing for short hops (a 10-minute ride costs ~৳17,
   not a flat hourly rate).
+- **Live demo idea**: open the site on a phone, then use your laptop's camera to scan one
+  of the station QR codes on the Dock Board — it decodes in real time and jumps straight
+  into booking that station.
 - **Extendability** (mention as future work): real payment gateway integration (bKash
   Merchant API), GPS-based dock geofencing, QR-code unlock instead of a manual code,
   admin dashboard for facilities staff, and a login system tied to student ID.
