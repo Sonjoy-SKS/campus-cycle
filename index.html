@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>CampusCycle — Ride the Campus, Pay as You Go</title>
-<meta name="description" content="Campus bike-share: unlock a cycle at any dock, pay ৳100/hr with bKash, Rocket, Nagad or Upay." />
+<meta name="description" content="Campus bike-share: top up a wallet with bKash, Rocket, Nagad or Upay, then unlock cycles at ৳100/hr straight from your balance." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -19,6 +19,7 @@
     --accent:#F2A93B;
     --accent-ink:#5A3B08;
     --danger:#E4572E;
+    --danger-pale:#FBEAE4;
     --line:#DDE3D9;
     --radius:14px;
     --shadow: 0 1px 2px rgba(19,34,27,0.06), 0 8px 24px -12px rgba(19,34,27,0.18);
@@ -47,7 +48,7 @@
     backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line);
   }
-  .topbar{display:flex; align-items:center; justify-content:space-between; padding:16px 0;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; padding:16px 0; gap:12px; flex-wrap:wrap;}
   .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:19px;}
   .brand .mark{
     width:34px;height:34px;border-radius:9px;
@@ -61,12 +62,13 @@
     transition:.15s;
   }
   .tab-btn.active{background:var(--primary); color:#fff;}
-  .rate-pill{
-    display:flex; align-items:center; gap:6px;
-    font-family:'JetBrains Mono'; font-size:12.5px; font-weight:700;
+  .wallet-pill{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono'; font-size:13px; font-weight:700;
     background:var(--accent); color:var(--accent-ink);
-    padding:7px 12px; border-radius:999px;
+    padding:8px 14px; border-radius:999px; border:none; cursor:pointer;
   }
+  .wallet-pill .ic{font-size:14px;}
 
   /* ---------- hero ---------- */
   .hero{padding:56px 0 40px; position:relative; overflow:hidden;}
@@ -190,6 +192,24 @@
     background:var(--primary-pale); border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin:14px 0;
   }
   .fee-box .amt{font-family:'Space Grotesk'; font-size:26px; color:var(--primary); font-weight:700;}
+  .balance-row{
+    display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--ink-soft);
+    padding:2px 2px 12px;
+  }
+  .balance-row b{color:var(--ink); font-family:'JetBrains Mono';}
+
+  .alert{
+    border-radius:12px; padding:12px 14px; font-size:13px; margin:14px 0; display:flex; gap:10px; align-items:flex-start;
+  }
+  .alert.warn{background:var(--danger-pale); color:#8a2e12;}
+  .alert.warn b{display:block; margin-bottom:2px;}
+
+  .amount-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:14px 0;}
+  .amt-btn{
+    padding:12px 4px; border-radius:10px; border:1px solid var(--line); background:var(--bg);
+    font-weight:700; font-size:13.5px; cursor:pointer; text-align:center; font-family:'JetBrains Mono';
+  }
+  .amt-btn.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
 
   .pay-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0;}
   .pay-opt{
@@ -217,11 +237,6 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .center-pad{padding:30px 10px; text-align:center;}
 
-  .success-tick{
-    width:56px;height:56px;border-radius:50%; background:#2FA84F; color:#fff; display:flex;align-items:center;justify-content:center;
-    font-size:28px; margin:0 auto 14px;
-  }
-
   /* receipt ticket in modal */
   .receipt{
     background:var(--primary); color:#fff; border-radius:14px; padding:20px; margin-top:6px;
@@ -237,12 +252,13 @@
   .receipt .grid2 b{display:block; font-family:'Space Grotesk'; font-size:15px;}
 
   /* ---------- my rides ---------- */
-  .ride-card{
+  .ride-card, .txn-card{
     background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px;
     display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:12px; flex-wrap:wrap;
   }
   .ride-left{display:flex; gap:12px; align-items:center;}
-  .ride-icon{width:40px;height:40px;border-radius:10px; background:var(--primary-pale); display:flex;align-items:center;justify-content:center; font-size:18px;}
+  .ride-icon{width:40px;height:40px;border-radius:10px; background:var(--primary-pale); display:flex;align-items:center;justify-content:center; font-size:18px; flex-shrink:0;}
+  .ride-icon.topup{background:#FFF1DC;}
   .ride-title{font-weight:700; font-size:14.5px;}
   .ride-sub{font-size:12px; color:var(--ink-soft); margin-top:2px;}
   .status-chip{font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px; font-family:'JetBrains Mono';}
@@ -251,8 +267,23 @@
   .empty{
     border:1.5px dashed var(--line); border-radius:14px; padding:36px 20px; text-align:center; color:var(--ink-soft);
   }
+  .amt-plus{color:var(--primary); font-family:'JetBrains Mono'; font-weight:700;}
+  .amt-minus{color:var(--danger); font-family:'JetBrains Mono'; font-weight:700;}
 
-  /* ---------- impact stats ---------- */
+  /* ---------- wallet view ---------- */
+  .wallet-card{
+    background:linear-gradient(135deg, var(--primary) 0%, #0F2E20 100%);
+    border-radius:20px; padding:26px; color:#fff; box-shadow:var(--shadow); position:relative; overflow:hidden;
+  }
+  .wallet-card::after{
+    content:''; position:absolute; right:-40px; top:-40px; width:160px; height:160px; border-radius:50%;
+    background:rgba(255,255,255,0.05);
+  }
+  .wallet-card .tag{font-family:'JetBrains Mono'; font-size:11px; opacity:.7; letter-spacing:.08em;}
+  .wallet-card .balance{font-family:'Space Grotesk'; font-size:42px; font-weight:700; margin:6px 0 20px;}
+  .wallet-card .row{display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;}
+  .wallet-card .cardnum{font-family:'JetBrains Mono'; font-size:14px; letter-spacing:.12em; opacity:.85;}
+
   .impact-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
   @media (max-width:720px){ .impact-grid{grid-template-columns:1fr 1fr;} }
   .impact-card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px;}
@@ -264,7 +295,7 @@
   .toast{
     position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); opacity:0;
     background:var(--ink); color:#fff; padding:12px 20px; border-radius:10px; font-size:13.5px; font-weight:600;
-    transition:.25s; z-index:200; pointer-events:none;
+    transition:.25s; z-index:200; pointer-events:none; max-width:90vw; text-align:center;
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
@@ -280,9 +311,12 @@
     <div class="tabs">
       <button class="tab-btn active" data-view="home">Dock Board</button>
       <button class="tab-btn" data-view="rides">My Rides</button>
+      <button class="tab-btn" data-view="wallet">Wallet</button>
       <button class="tab-btn" data-view="impact">Impact</button>
     </div>
-    <div class="rate-pill">৳100 / hr</div>
+    <button class="wallet-pill" id="wallet-pill" onclick="switchView('wallet')">
+      <span class="ic">💳</span> <span id="wallet-pill-amount">৳0</span>
+    </button>
   </div>
 </header>
 
@@ -292,16 +326,16 @@
     <div class="hero-grid">
       <div>
         <div class="eyebrow"><span class="dot-live"></span> 6 docks live on campus right now</div>
-        <h1>Grab a cycle between classes. Pay by phone in seconds.</h1>
-        <p>Every dock on campus is stocked with ready-to-ride cycles. Scan in, ride, and pay only for the minutes you use — ৳100 per hour, split by the minute — with bKash, Rocket, Nagad or Upay.</p>
+        <h1>Top up once. Ride anytime.</h1>
+        <p>Add money to your CampusCycle wallet using bKash, Rocket, Nagad or Upay — then unlock any cycle on campus straight from your balance, no repeat payments. ৳100/hr, billed by the minute.</p>
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="document.getElementById('board-anchor').scrollIntoView({behavior:'smooth'})">Find a dock ↓</button>
-          <button class="btn btn-ghost" onclick="switchView('impact')">See campus impact</button>
+          <button class="btn btn-ghost" onclick="switchView('wallet')">Top up wallet</button>
         </div>
         <div class="hero-stats">
           <div class="hstat"><b id="stat-cycles">—</b><span>cycles across campus</span></div>
           <div class="hstat"><b>6</b><span>docks</span></div>
-          <div class="hstat"><b>4</b><span>payment options</span></div>
+          <div class="hstat"><b id="stat-wallet">৳0</b><span>your wallet balance</span></div>
         </div>
       </div>
       <div class="ticket-preview">
@@ -313,11 +347,11 @@
           <div class="qr"></div>
         </div>
         <p class="fee">৳100<span style="font-size:16px; font-weight:500;">/hour</span></p>
-        <div class="sub">Billed per minute · unlock code sent instantly</div>
+        <div class="sub">Billed per minute · paid straight from your wallet</div>
         <div class="perf"></div>
         <div style="display:flex; justify-content:space-between; font-size:12px; opacity:.85;">
-          <span>bKash · Rocket · Nagad · Upay</span>
-          <span class="mono">NO CARD NEEDED</span>
+          <span>Top up via bKash · Rocket · Nagad · Upay</span>
+          <span class="mono">NO REPEAT LOGIN</span>
         </div>
       </div>
     </div>
@@ -345,10 +379,38 @@
     <div class="section-head">
       <div>
         <h2>My rides</h2>
-        <p>Everything you've unlocked, active or completed.</p>
+        <p>Everything you've unlocked, active or completed — all paid from your wallet.</p>
       </div>
     </div>
     <div id="rides-list"></div>
+  </div>
+</section>
+
+<!-- ============ WALLET ============ -->
+<section id="view-wallet" class="view">
+  <div class="wrap section" style="padding-top:40px;">
+    <div class="section-head">
+      <div>
+        <h2>Wallet</h2>
+        <p>Your CampusCycle balance — like a metro card, but for cycles.</p>
+      </div>
+    </div>
+
+    <div class="wallet-card">
+      <div class="tag">AVAILABLE BALANCE</div>
+      <div class="balance" id="wallet-balance-big">৳0</div>
+      <div class="row">
+        <div class="cardnum" id="wallet-card-num">CC · 0000 0000</div>
+        <button class="btn btn-accent" onclick="openTopupAmount()">+ Add money</button>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;">
+      <div class="section-head" style="margin-bottom:12px;">
+        <div><h2 style="font-size:17px;">Transaction history</h2></div>
+      </div>
+      <div id="txn-list"></div>
+    </div>
   </div>
 </section>
 
@@ -363,7 +425,7 @@
     </div>
     <div class="impact-grid">
       <div class="impact-card"><div class="n" id="imp-rides">0</div><div class="l">rides completed</div></div>
-      <div class="impact-card"><div class="n" id="imp-revenue">৳0</div><div class="l">collected via mobile payments</div></div>
+      <div class="impact-card"><div class="n" id="imp-topups">৳0</div><div class="l">topped up via mobile wallets</div></div>
       <div class="impact-card"><div class="n" id="imp-minutes">0</div><div class="l">minutes ridden</div></div>
       <div class="impact-card"><div class="n" id="imp-co2">0 kg</div><div class="l">CO₂ saved vs. rickshaw/CNG trips*</div></div>
     </div>
@@ -373,11 +435,11 @@
 
 <footer>
   <div class="wrap">
-    Built for IDP-2 · CampusCycle is a functional demo — payments are simulated locally and no real money moves.
+    Built for IDP-2 · CampusCycle is a functional demo — wallet top-ups are simulated locally and no real money moves.
   </div>
 </footer>
 
-<!-- ============ BOOKING MODAL ============ -->
+<!-- ============ BOOKING MODAL (choose duration) ============ -->
 <div class="overlay" id="overlay-book">
   <div class="modal">
     <div class="modal-head">
@@ -402,17 +464,66 @@
         </div>
         <div class="amt" id="fee-amount">৳100</div>
       </div>
-      <button class="btn btn-primary btn-block" id="proceed-pay-btn">Proceed to pay</button>
+      <div class="balance-row"><span>Wallet balance</span><b id="book-wallet-balance">৳0</b></div>
+      <button class="btn btn-primary btn-block" id="proceed-pay-btn">Continue</button>
     </div>
   </div>
 </div>
 
-<!-- ============ PAYMENT MODAL ============ -->
+<!-- ============ WALLET CONFIRM MODAL (pay from balance) ============ -->
+<div class="overlay" id="overlay-wallet-confirm">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h3>Confirm & unlock</h3><div class="muted">Paying from your CampusCycle wallet</div></div>
+      <button class="modal-close" onclick="closeModal('overlay-wallet-confirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fee-box">
+        <div>
+          <div style="font-size:12px; color:var(--ink-soft); font-weight:600;">Ride cost</div>
+          <div style="font-size:11.5px; color:var(--ink-soft);" id="wc-station-line">Station · duration</div>
+        </div>
+        <div class="amt" id="wc-fee">৳100</div>
+      </div>
+      <div class="balance-row"><span>Balance now</span><b id="wc-balance-before">৳0</b></div>
+      <div class="balance-row"><span>Balance after this ride</span><b id="wc-balance-after">৳0</b></div>
+      <button class="btn btn-primary btn-block" id="wallet-confirm-btn">Confirm & unlock cycle</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOP-UP: choose amount ============ -->
+<div class="overlay" id="overlay-topup-amount">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h3>Add money to wallet</h3><div class="muted">Choose an amount to top up</div></div>
+      <button class="modal-close" onclick="closeModal('overlay-topup-amount')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert warn" id="topup-note" style="display:none;">
+        <div><b id="topup-note-title">Insufficient balance</b><span id="topup-note-body"></span></div>
+      </div>
+      <div class="amount-grid" id="amount-grid">
+        <button class="amt-btn" data-amt="100">৳100</button>
+        <button class="amt-btn active" data-amt="200">৳200</button>
+        <button class="amt-btn" data-amt="500">৳500</button>
+        <button class="amt-btn" data-amt="1000">৳1000</button>
+      </div>
+      <div class="field">
+        <label>Or enter a custom amount</label>
+        <input id="custom-amount" type="number" min="20" step="10" placeholder="e.g. 350" />
+      </div>
+      <button class="btn btn-primary btn-block" id="continue-topup-btn">Continue to payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOP-UP: choose gateway ============ -->
 <div class="overlay" id="overlay-pay">
   <div class="modal">
     <div class="modal-head">
       <div>
-        <h3>Pay to unlock</h3>
+        <h3>Add <span id="pay-amount-label">৳0</span> to wallet</h3>
         <div class="muted">Choose a wallet to continue</div>
       </div>
       <button class="modal-close" onclick="closeModal('overlay-pay')">✕</button>
@@ -465,7 +576,7 @@
         <div class="grid2">
           <div><span class="label">STATION</span><b id="rc-station">—</b></div>
           <div><span class="label">DURATION</span><b id="rc-duration">—</b></div>
-          <div><span class="label">PAID VIA</span><b id="rc-gateway">—</b></div>
+          <div><span class="label">PAID VIA</span><b id="rc-gateway">Wallet Balance</b></div>
           <div><span class="label">AMOUNT</span><b id="rc-amount">—</b></div>
         </div>
       </div>
@@ -478,7 +589,7 @@
 
 <script>
 /* ------------------------------------------------------------------
-   CampusCycle — demo bike-share app
+   CampusCycle — demo bike-share app with a top-up wallet
    All state is local (localStorage). No real payments occur.
 ------------------------------------------------------------------ */
 
@@ -500,10 +611,12 @@ let state = {
   pendingStation: null,
   pendingMinutes: 60,
   pendingGateway: null,
+  pendingTopupAmount: 0,
+  afterTopupAction: null, // null | 'completeRide'
 };
 
 /* ---------------- helpers ---------------- */
-function fmtMoney(n){ return '৳' + n.toLocaleString('en-BD'); }
+function fmtMoney(n){ return '৳' + Math.round(n).toLocaleString('en-BD'); }
 function fmtDuration(min){
   if(min < 60) return min + ' min';
   const h = Math.floor(min/60), m = min % 60;
@@ -520,17 +633,19 @@ function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
+  setTimeout(()=>t.classList.remove('show'), 2400);
 }
 function openModal(id){ document.getElementById(id).classList.add('show'); }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 
-/* ---------------- storage ---------------- */
+/* ---------------- storage: rides ---------------- */
 function getRides(){
   try{ return JSON.parse(localStorage.getItem('cc_rides') || '[]'); }
   catch(e){ return []; }
 }
 function saveRides(rides){ localStorage.setItem('cc_rides', JSON.stringify(rides)); }
+
+/* ---------------- storage: stations ---------------- */
 function getStationState(){
   try{
     const saved = JSON.parse(localStorage.getItem('cc_stations') || 'null');
@@ -543,6 +658,31 @@ function getStationState(){
 }
 function saveStationState(obj){ localStorage.setItem('cc_stations', JSON.stringify(obj)); }
 
+/* ---------------- storage: wallet ---------------- */
+function getWallet(){
+  try{
+    const w = JSON.parse(localStorage.getItem('cc_wallet') || 'null');
+    if(w) return w;
+  }catch(e){}
+  const fresh = { balance: 0, cardNum: 'CC · ' + String(Math.floor(1000+Math.random()*8999)) + ' ' + String(Math.floor(1000+Math.random()*8999)) };
+  localStorage.setItem('cc_wallet', JSON.stringify(fresh));
+  return fresh;
+}
+function saveWallet(w){ localStorage.setItem('cc_wallet', JSON.stringify(w)); }
+
+function getTxns(){
+  try{ return JSON.parse(localStorage.getItem('cc_wallet_txns') || '[]'); }
+  catch(e){ return []; }
+}
+function saveTxns(list){ localStorage.setItem('cc_wallet_txns', JSON.stringify(list)); }
+function addTxn(txn){
+  const list = getTxns();
+  list.unshift(txn);
+  saveTxns(list);
+}
+
+const GATEWAY_LABELS = { bkash:'bKash', rocket:'Rocket', nagad:'Nagad', upay:'Upay' };
+
 /* ---------------- nav ---------------- */
 function switchView(name){
   state.view = name;
@@ -550,12 +690,59 @@ function switchView(name){
   document.getElementById('view-' + name).classList.add('active');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   if(name === 'rides') renderRides();
+  if(name === 'wallet') renderWalletView();
   if(name === 'impact') renderImpact();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> switchView(btn.dataset.view));
 });
+
+/* ---------------- wallet pill + view ---------------- */
+function renderWalletPill(){
+  const w = getWallet();
+  document.getElementById('wallet-pill-amount').textContent = fmtMoney(w.balance);
+  document.getElementById('stat-wallet').textContent = fmtMoney(w.balance);
+}
+function renderWalletView(){
+  const w = getWallet();
+  document.getElementById('wallet-balance-big').textContent = fmtMoney(w.balance);
+  document.getElementById('wallet-card-num').textContent = w.cardNum;
+
+  const txns = getTxns();
+  const list = document.getElementById('txn-list');
+  if(txns.length === 0){
+    list.innerHTML = `<div class="empty">No transactions yet — add money to get started.</div>`;
+    return;
+  }
+  list.innerHTML = txns.map(t=>{
+    const when = new Date(t.at).toLocaleString('en-BD', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short'});
+    if(t.type === 'topup'){
+      return `
+        <div class="txn-card">
+          <div class="ride-left">
+            <div class="ride-icon topup">⬆️</div>
+            <div>
+              <div class="ride-title">Added money · ${GATEWAY_LABELS[t.gateway] || 'Mobile wallet'}</div>
+              <div class="ride-sub">${when}</div>
+            </div>
+          </div>
+          <div class="amt-plus">+${fmtMoney(t.amount)}</div>
+        </div>`;
+    }
+    return `
+      <div class="txn-card">
+        <div class="ride-left">
+          <div class="ride-icon">🚲</div>
+          <div>
+            <div class="ride-title">Ride · ${t.note || 'Campus dock'}</div>
+            <div class="ride-sub">${when}</div>
+          </div>
+        </div>
+        <div class="amt-minus">−${fmtMoney(t.amount)}</div>
+      </div>`;
+  }).join('');
+}
 
 /* ---------------- board rendering ---------------- */
 function renderBoard(){
@@ -614,7 +801,7 @@ document.querySelectorAll('.filter-chip').forEach(chip=>{
   });
 });
 
-/* ---------------- booking flow ---------------- */
+/* ---------------- booking flow (choose duration) ---------------- */
 function startBooking(stationId){
   const station = STATIONS.find(s=>s.id === stationId);
   state.pendingStation = station;
@@ -626,6 +813,7 @@ function startBooking(stationId){
     b.classList.toggle('active', Number(b.dataset.min) === 60);
   });
   document.getElementById('fee-amount').textContent = fmtMoney(calcFee(60));
+  document.getElementById('book-wallet-balance').textContent = fmtMoney(getWallet().balance);
   openModal('overlay-book');
 }
 
@@ -638,17 +826,145 @@ document.querySelectorAll('.dur-btn').forEach(btn=>{
   });
 });
 
+/* "Continue" on the duration modal: decide wallet-pay vs top-up-required */
 document.getElementById('proceed-pay-btn').addEventListener('click', ()=>{
+  const fee = calcFee(state.pendingMinutes);
+  const wallet = getWallet();
+
   closeModal('overlay-book');
-  state.pendingGateway = null;
+
+  if(wallet.balance >= fee){
+    // enough balance — go straight to confirm & pay from wallet
+    document.getElementById('wc-station-line').textContent = `${state.pendingStation.name} · ${fmtDuration(state.pendingMinutes)}`;
+    document.getElementById('wc-fee').textContent = fmtMoney(fee);
+    document.getElementById('wc-balance-before').textContent = fmtMoney(wallet.balance);
+    document.getElementById('wc-balance-after').textContent = fmtMoney(wallet.balance - fee);
+    openModal('overlay-wallet-confirm');
+  } else {
+    // not enough — send to top-up flow, then auto-unlock once funded
+    const shortfall = fee - wallet.balance;
+    const suggested = Math.max(100, Math.ceil(shortfall / 50) * 50);
+    state.afterTopupAction = 'completeRide';
+    openTopupAmount(suggested, `You have ${fmtMoney(wallet.balance)} in your wallet but this ride costs ${fmtMoney(fee)}. Add at least ${fmtMoney(shortfall)} more to continue.`);
+  }
+});
+
+/* confirm & pay from wallet */
+document.getElementById('wallet-confirm-btn').addEventListener('click', ()=>{
+  closeModal('overlay-wallet-confirm');
+  openModal('overlay-processing');
+  document.getElementById('processing-text').textContent = 'Paying from your wallet…';
+  setTimeout(()=>{
+    closeModal('overlay-processing');
+    finalizeRide();
+  }, 700);
+});
+
+/* deduct fee, create ride record, show ticket */
+function finalizeRide(){
+  const station = state.pendingStation;
+  const minutes = state.pendingMinutes;
+  const fee = calcFee(minutes);
+  const wallet = getWallet();
+
+  if(wallet.balance < fee){
+    showToast('Wallet balance is still too low — tap Unlock to try again.');
+    return;
+  }
+
+  wallet.balance -= fee;
+  saveWallet(wallet);
+  addTxn({ type:'ride', amount:fee, note:station.name, at:Date.now() });
+
+  const stationCycles = getStationState();
+  stationCycles[station.id] = Math.max(0, stationCycles[station.id] - 1);
+  saveStationState(stationCycles);
+
+  const code = genCode();
+  const now = Date.now();
+  const ride = {
+    id: 'RD' + now,
+    stationId: station.id,
+    stationName: station.name,
+    minutes, fee,
+    code,
+    startedAt: now,
+    endsAt: now + minutes*60*1000,
+    status: 'active',
+  };
+  const rides = getRides();
+  rides.unshift(ride);
+  saveRides(rides);
+
+  document.getElementById('unlock-code').textContent = code;
+  document.getElementById('rc-station').textContent = station.name;
+  document.getElementById('rc-duration').textContent = fmtDuration(minutes);
+  document.getElementById('rc-gateway').textContent = 'Wallet Balance';
+  document.getElementById('rc-amount').textContent = fmtMoney(fee);
+
+  openModal('overlay-success');
+  renderBoard();
+  renderWalletPill();
+  showToast('Cycle unlocked — paid from your wallet!');
+}
+
+/* ---------------- top-up flow ---------------- */
+function openTopupAmount(prefillAmount, note){
+  document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('active'));
+  const noteBox = document.getElementById('topup-note');
+  if(note){
+    noteBox.style.display = 'flex';
+    document.getElementById('topup-note-body').textContent = note;
+  } else {
+    noteBox.style.display = 'none';
+  }
+  const customInput = document.getElementById('custom-amount');
+  customInput.value = '';
+  if(prefillAmount){
+    // try to match a preset chip, else put it in the custom field
+    const match = [...document.querySelectorAll('.amt-btn')].find(b => Number(b.dataset.amt) === prefillAmount);
+    if(match){ match.classList.add('active'); }
+    else { customInput.value = prefillAmount; }
+  } else {
+    document.querySelector('.amt-btn[data-amt="200"]').classList.add('active');
+  }
+  openModal('overlay-topup-amount');
+}
+
+document.querySelectorAll('.amt-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('custom-amount').value = '';
+  });
+});
+document.getElementById('custom-amount').addEventListener('input', ()=>{
+  document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('active'));
+});
+
+document.getElementById('continue-topup-btn').addEventListener('click', ()=>{
+  const custom = Number(document.getElementById('custom-amount').value);
+  const activeChip = document.querySelector('.amt-btn.active');
+  const amount = custom > 0 ? custom : (activeChip ? Number(activeChip.dataset.amt) : 0);
+
+  if(!amount || amount < 20){
+    showToast('Enter an amount of at least ৳20.');
+    return;
+  }
+
+  state.pendingTopupAmount = amount;
+  closeModal('overlay-topup-amount');
+
+  document.getElementById('pay-amount-label').textContent = fmtMoney(amount);
   document.querySelectorAll('.pay-opt').forEach(p=>p.classList.remove('active'));
   document.getElementById('phone-input').value = '';
   document.getElementById('pin-input').value = '';
   document.getElementById('confirm-pay-btn').disabled = true;
+  state.pendingGateway = null;
   openModal('overlay-pay');
 });
 
-/* ---------------- payment gateway (simulated) ---------------- */
+/* payment gateway selection (used only for topping up the wallet) */
 document.querySelectorAll('.pay-opt').forEach(opt=>{
   opt.addEventListener('click', ()=>{
     document.querySelectorAll('.pay-opt').forEach(p=>p.classList.remove('active'));
@@ -666,8 +982,6 @@ function validatePayForm(){
 document.getElementById('phone-input').addEventListener('input', validatePayForm);
 document.getElementById('pin-input').addEventListener('input', validatePayForm);
 
-const GATEWAY_LABELS = { bkash:'bKash', rocket:'Rocket', nagad:'Nagad', upay:'Upay' };
-
 document.getElementById('confirm-pay-btn').addEventListener('click', ()=>{
   closeModal('overlay-pay');
   openModal('overlay-processing');
@@ -676,47 +990,32 @@ document.getElementById('confirm-pay-btn').addEventListener('click', ()=>{
 
   setTimeout(()=>{
     closeModal('overlay-processing');
-    completeBooking();
+    completeTopup();
   }, 1500);
 });
 
-function completeBooking(){
-  const station = state.pendingStation;
-  const minutes = state.pendingMinutes;
-  const fee = calcFee(minutes);
-  const code = genCode();
-  const now = Date.now();
+function completeTopup(){
+  const amount = state.pendingTopupAmount;
+  const wallet = getWallet();
+  wallet.balance += amount;
+  saveWallet(wallet);
+  addTxn({ type:'topup', amount, gateway:state.pendingGateway, at:Date.now() });
+  renderWalletPill();
+  if(state.view === 'wallet') renderWalletView();
 
-  // deduct a cycle from station stock
-  const stationCycles = getStationState();
-  stationCycles[station.id] = Math.max(0, stationCycles[station.id] - 1);
-  saveStationState(stationCycles);
-
-  const ride = {
-    id: 'RD' + now,
-    stationId: station.id,
-    stationName: station.name,
-    minutes, fee,
-    gateway: state.pendingGateway,
-    phone: document.getElementById('phone-input').value.trim(),
-    code,
-    startedAt: now,
-    endsAt: now + minutes*60*1000,
-    status: 'active',
-  };
-  const rides = getRides();
-  rides.unshift(ride);
-  saveRides(rides);
-
-  document.getElementById('unlock-code').textContent = code;
-  document.getElementById('rc-station').textContent = station.name;
-  document.getElementById('rc-duration').textContent = fmtDuration(minutes);
-  document.getElementById('rc-gateway').textContent = GATEWAY_LABELS[state.pendingGateway];
-  document.getElementById('rc-amount').textContent = fmtMoney(fee);
-
-  openModal('overlay-success');
-  renderBoard();
-  showToast('Payment successful — cycle unlocked!');
+  if(state.afterTopupAction === 'completeRide'){
+    state.afterTopupAction = null;
+    const fee = calcFee(state.pendingMinutes);
+    const nowWallet = getWallet();
+    if(nowWallet.balance >= fee){
+      showToast(`${fmtMoney(amount)} added — unlocking your cycle…`);
+      finalizeRide();
+    } else {
+      showToast(`${fmtMoney(amount)} added to wallet. Balance is still short — tap Unlock again.`);
+    }
+  } else {
+    showToast(`${fmtMoney(amount)} added to your wallet!`);
+  }
 }
 
 /* ---------------- my rides ---------------- */
@@ -748,7 +1047,7 @@ function renderRides(){
           <div class="ride-icon">${active ? '🚲' : '✅'}</div>
           <div>
             <div class="ride-title">${r.stationName}</div>
-            <div class="ride-sub">${started} · ${fmtDuration(r.minutes)} · ${GATEWAY_LABELS[r.gateway]} · code ${r.code}</div>
+            <div class="ride-sub">${started} · ${fmtDuration(r.minutes)} · Wallet · code ${r.code}</div>
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
@@ -777,13 +1076,14 @@ function renderRides(){
 /* ---------------- impact stats ---------------- */
 function renderImpact(){
   const rides = getRides();
+  const txns = getTxns();
   const totalRides = rides.length;
-  const totalRevenue = rides.reduce((sum,r)=>sum + r.fee, 0);
+  const totalTopups = txns.filter(t=>t.type==='topup').reduce((sum,t)=>sum + t.amount, 0);
   const totalMinutes = rides.reduce((sum,r)=>sum + r.minutes, 0);
   const co2 = ((totalMinutes/10) * 0.09).toFixed(1);
 
   document.getElementById('imp-rides').textContent = totalRides;
-  document.getElementById('imp-revenue').textContent = fmtMoney(totalRevenue);
+  document.getElementById('imp-topups').textContent = fmtMoney(totalTopups);
   document.getElementById('imp-minutes').textContent = totalMinutes;
   document.getElementById('imp-co2').textContent = co2 + ' kg';
 }
@@ -791,6 +1091,7 @@ function renderImpact(){
 /* ---------------- init ---------------- */
 renderBoard();
 renderRides();
+renderWalletPill();
 </script>
 </body>
 </html>
