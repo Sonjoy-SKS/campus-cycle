@@ -301,6 +301,46 @@
 
   .view{display:none;}
   .view.active{display:block;}
+
+  /* ---------- QR scan + demo codes ---------- */
+  .scan-frame{
+    position:relative; width:100%; aspect-ratio:1/1; border-radius:14px; overflow:hidden;
+    background:#0c1a13;
+  }
+  .scan-frame video{width:100%; height:100%; object-fit:cover; display:block;}
+  .scan-reticle{
+    position:absolute; inset:14%; border:2.5px solid var(--accent); border-radius:16px;
+    box-shadow:0 0 0 999px rgba(0,0,0,0.35);
+    pointer-events:none;
+  }
+  .scan-status{
+    text-align:center; font-size:12.5px; color:var(--ink-soft); margin:12px 0 6px; min-height:16px;
+  }
+  .scan-divider{
+    display:flex; align-items:center; gap:10px; margin:16px 0; color:var(--ink-soft); font-size:11.5px; font-weight:600;
+  }
+  .scan-divider::before, .scan-divider::after{content:''; flex:1; height:1px; background:var(--line);}
+  .manual-row{display:flex; gap:8px;}
+  .manual-row input{flex:1; padding:11px 12px; border-radius:10px; border:1px solid var(--line); font-family:'JetBrains Mono'; text-transform:uppercase;}
+
+  .qr-demo-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px;}
+  @media (max-width:720px){ .qr-demo-grid{grid-template-columns:repeat(2,1fr);} }
+  .qr-demo-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; text-align:center;
+  }
+  .qr-demo-card .qr-box{
+    width:104px; height:104px; margin:0 auto 10px; background:#fff; border-radius:8px; padding:6px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .qr-demo-card .qr-box img, .qr-demo-card .qr-box canvas{width:100%; height:100%;}
+  .qr-demo-card .qname{font-weight:700; font-size:12.5px;}
+  .qr-demo-card .qcode{font-family:'JetBrains Mono'; font-size:11px; color:var(--ink-soft); margin-top:2px;}
+  .qr-note{
+    background:var(--primary-pale); color:var(--primary); border-radius:12px; padding:12px 14px; font-size:13px;
+    margin-top:16px; line-height:1.5;
+  }
+  #receipt-qr{background:#fff; border-radius:8px; padding:5px; width:52px; height:52px; display:flex; align-items:center; justify-content:center;}
+  #receipt-qr img, #receipt-qr canvas{width:100%; height:100%;}
 </style>
 </head>
 <body>
@@ -368,8 +408,18 @@
       <input id="search" type="text" placeholder="Search a dock — e.g. Library, TSC, Hall..." />
       <button class="filter-chip active" data-filter="all">All docks</button>
       <button class="filter-chip" data-filter="avail">Available now</button>
+      <button class="btn btn-primary" onclick="openScanModal()">📷 Scan QR to unlock</button>
     </div>
     <div class="board" id="board"></div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <div>
+        <h2 style="font-size:17px;">Station QR codes</h2>
+        <p>For your presentation: point a camera at any code below to simulate scanning that dock's cycle.</p>
+      </div>
+    </div>
+    <div class="qr-demo-grid" id="qr-demo-grid"></div>
+    <div class="qr-note">💡 Tip for the live demo: open this page on a phone, then use your laptop's camera (or a second phone) to scan one of the codes above — it'll unlock that exact station.</div>
   </div>
 </section>
 
@@ -570,7 +620,7 @@
       <div class="receipt">
         <div class="top-row">
           <div><div class="label">UNLOCK CODE</div><div class="code" id="unlock-code">— — — —</div></div>
-          <div class="qr" style="width:48px;height:48px;"></div>
+          <div id="receipt-qr"></div>
         </div>
         <div class="perf2"></div>
         <div class="grid2">
@@ -585,13 +635,47 @@
   </div>
 </div>
 
+<!-- ============ SCAN TO UNLOCK MODAL ============ -->
+<div class="overlay" id="overlay-scan">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h3>Scan to unlock</h3><div class="muted">Point your camera at a station's QR code</div></div>
+      <button class="modal-close" onclick="closeScanModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="scan-frame">
+        <video id="scan-video" playsinline muted></video>
+        <div class="scan-reticle"></div>
+      </div>
+      <div class="scan-status" id="scan-status">Starting camera…</div>
+
+      <div class="scan-divider">OR ENTER MANUALLY</div>
+      <div class="manual-row">
+        <input id="manual-station-input" type="text" maxlength="4" placeholder="e.g. ST01" />
+        <button class="btn btn-primary" id="manual-station-btn">Unlock</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="scan-canvas" style="display:none;"></canvas>
+
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
 <script>
 /* ------------------------------------------------------------------
    CampusCycle — demo bike-share app with a top-up wallet
    All state is local (localStorage). No real payments occur.
+
+   QR unlock: qrcode.min.js draws the demo codes + receipt code.
+   jsQR.js decodes camera frames to read them back. Both are loaded
+   from cdnjs above; if either fails to load (e.g. offline), the app
+   falls back gracefully — manual entry still works everywhere.
 ------------------------------------------------------------------ */
+
+const QR_PREFIX = 'CAMPUSCYCLE:';
 
 const RATE_PER_HOUR = 100;
 
@@ -901,6 +985,7 @@ function finalizeRide(){
   document.getElementById('rc-duration').textContent = fmtDuration(minutes);
   document.getElementById('rc-gateway').textContent = 'Wallet Balance';
   document.getElementById('rc-amount').textContent = fmtMoney(fee);
+  drawQR('receipt-qr', QR_PREFIX + code, 52);
 
   openModal('overlay-success');
   renderBoard();
@@ -1088,10 +1173,128 @@ function renderImpact(){
   document.getElementById('imp-co2').textContent = co2 + ' kg';
 }
 
+/* ---------------- QR generation ---------------- */
+function drawQR(elementId, text, size){
+  const el = document.getElementById(elementId);
+  if(!el) return;
+  el.innerHTML = '';
+  if(typeof QRCode === 'undefined'){
+    // library failed to load (e.g. offline) — leave a plain placeholder
+    el.style.background = '#fff';
+    return;
+  }
+  new QRCode(el, {
+    text: text,
+    width: size, height: size,
+    colorDark: '#1B4332', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+
+function renderStationQRs(){
+  const grid = document.getElementById('qr-demo-grid');
+  grid.innerHTML = STATIONS.map(s => `
+    <div class="qr-demo-card">
+      <div class="qr-box" id="qrbox-${s.id}"></div>
+      <div class="qname">${s.name}</div>
+      <div class="qcode">${s.id}</div>
+    </div>
+  `).join('');
+  STATIONS.forEach(s => drawQR('qrbox-' + s.id, QR_PREFIX + s.id, 104));
+}
+
+/* ---------------- QR camera scanning ---------------- */
+let scanStream = null;
+let scanRafId = null;
+
+function openScanModal(){
+  openModal('overlay-scan');
+  const statusEl = document.getElementById('scan-status');
+  document.getElementById('manual-station-input').value = '';
+  statusEl.textContent = 'Starting camera…';
+
+  if(typeof jsQR === 'undefined'){
+    statusEl.textContent = 'Camera scanning unavailable — use manual entry below.';
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    statusEl.textContent = "This browser can't access the camera — use manual entry below.";
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream=>{
+      scanStream = stream;
+      const video = document.getElementById('scan-video');
+      video.srcObject = stream;
+      video.play();
+      statusEl.textContent = 'Looking for a QR code…';
+      scanRafId = requestAnimationFrame(scanTick);
+    })
+    .catch(()=>{
+      statusEl.textContent = 'Camera permission denied — use manual entry below.';
+    });
+}
+
+function scanTick(){
+  const video = document.getElementById('scan-video');
+  const canvas = document.getElementById('scan-canvas');
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const result = jsQR(imageData.data, imageData.width, imageData.height);
+    if(result && result.data && result.data.startsWith(QR_PREFIX)){
+      handleScannedCode(result.data.slice(QR_PREFIX.length));
+      return;
+    }
+  }
+  scanRafId = requestAnimationFrame(scanTick);
+}
+
+function handleScannedCode(rawId){
+  const stationId = rawId.trim().toUpperCase();
+  const station = STATIONS.find(s => s.id === stationId);
+  if(!station){
+    document.getElementById('scan-status').textContent = 'Unrecognized code — try again or enter manually.';
+    return;
+  }
+  closeScanModal();
+  const stock = getStationState();
+  if(stock[station.id] === 0){
+    showToast(`${station.name} has no cycles available right now.`);
+    return;
+  }
+  startBooking(station.id);
+}
+
+function closeScanModal(){
+  closeModal('overlay-scan');
+  if(scanRafId) cancelAnimationFrame(scanRafId);
+  scanRafId = null;
+  if(scanStream){
+    scanStream.getTracks().forEach(t => t.stop());
+    scanStream = null;
+  }
+}
+
+document.getElementById('manual-station-btn').addEventListener('click', ()=>{
+  const val = document.getElementById('manual-station-input').value.trim().toUpperCase();
+  if(!val){ return; }
+  const normalized = val.startsWith('ST') ? val : 'ST' + val.padStart(2, '0');
+  handleScannedCode(normalized);
+});
+document.getElementById('manual-station-input').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') document.getElementById('manual-station-btn').click();
+});
+
 /* ---------------- init ---------------- */
 renderBoard();
 renderRides();
 renderWalletPill();
+renderStationQRs();
 </script>
 </body>
 </html>
